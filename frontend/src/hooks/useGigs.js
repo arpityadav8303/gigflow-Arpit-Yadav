@@ -1,74 +1,56 @@
 import { useDispatch, useSelector } from 'react-redux';
-//import { useEffect } from 'react';
-import gigService from '../services/gigService';
+import { useCallback } from 'react';
 import {
-  setGigs,
-  setSelectedGig,
-  addGig,
-  updateGigStatus,
-  setSearchQuery,
-  setLoading,
-  setError,
+  fetchGigs as fetchGigsThunk,
+  fetchGigDetail as fetchGigDetailThunk,
+  createGig as createGigThunk,
+  // updateGig as updateGigThunk,
+  deleteGig as deleteGigThunk,
   clearError,
 } from '../store/slices/gigSlice';
 
 export const useGigs = () => {
   const dispatch = useDispatch();
-  const { gigs, selectedGig, loading, error, searchQuery } = useSelector(
+  const { gigs, selectedGig, loading, error } = useSelector(
     (state) => state.gigs
   );
 
   // Fetch all gigs
-  const fetchGigs = async (search = '') => {
+  const fetchGigs = useCallback(async (search = '', category = '', page = 1) => {
     try {
-      dispatch(setLoading(true));
-      const gigsData = await gigService.getAllGigs(search);
-      dispatch(setGigs(gigsData));
+      await dispatch(fetchGigsThunk({ search, category, page })).unwrap();
     } catch (err) {
-      dispatch(setError(err));
+      console.error('Fetch gigs error:', err);
     }
-  };
+  }, [dispatch]);
 
   // Fetch single gig
-  const fetchGigById = async (gigId) => {
+  const fetchGigById = useCallback(async (gigId) => {
     try {
-      dispatch(setLoading(true));
-      const gig = await gigService.getGigById(gigId);
-      dispatch(setSelectedGig(gig));
+      await dispatch(fetchGigDetailThunk(gigId)).unwrap();
     } catch (err) {
-      dispatch(setError(err));
+      console.error('Fetch gig detail error:', err);
     }
-  };
+  }, [dispatch]);
 
   // Create new gig
-  const createNewGig = async (title, description, budget) => {
+  const createNewGig = useCallback(async (title, description, budget, category, deadline) => {
     try {
-      dispatch(setLoading(true));
-      const newGig = await gigService.createGig(title, description, budget);
-      dispatch(addGig(newGig));
+      const newGig = await dispatch(createGigThunk({ title, description, budget, category, deadline })).unwrap();
       return newGig;
     } catch (err) {
-      dispatch(setError(err));
       throw err;
     }
-  };
+  }, [dispatch]);
 
-  // Search gigs
-  const searchGigs = async (query) => {
+  // Delete gig
+  const removeGig = useCallback(async (gigId) => {
     try {
-      dispatch(setSearchQuery(query));
-      dispatch(setLoading(true));
-      const gigsData = await gigService.searchGigs(query);
-      dispatch(setGigs(gigsData));
+      await dispatch(deleteGigThunk(gigId)).unwrap();
     } catch (err) {
-      dispatch(setError(err));
+      throw err;
     }
-  };
-
-  // Handle gig status update (from socket or API)
-  const handleGigStatusUpdate = (gigId, status) => {
-    dispatch(updateGigStatus({ gigId, status }));
-  };
+  }, [dispatch]);
 
   const handleClearError = () => {
     dispatch(clearError());
@@ -79,12 +61,10 @@ export const useGigs = () => {
     selectedGig,
     loading,
     error,
-    searchQuery,
     fetchGigs,
     fetchGigById,
     createNewGig,
-    searchGigs,
-    handleGigStatusUpdate,
+    removeGig,
     clearError: handleClearError,
   };
 };

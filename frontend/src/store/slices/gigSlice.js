@@ -1,86 +1,180 @@
-// Placeholder
-import { createSlice } from '@reduxjs/toolkit';
+// frontend/src/slices/gigsSlice.js
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
+
+const API = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  withCredentials: true
+});
+
+export const fetchGigs = createAsyncThunk(
+  'gigs/fetchGigs',
+  async ({ search, category, page = 1, limit = 10 }, { rejectWithValue }) => {
+    try {
+      const response = await API.get('/gigs', {
+        params: { search, category, page, limit }
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch gigs');
+    }
+  }
+);
+
+export const fetchMyGigs = createAsyncThunk(
+  'gigs/fetchMyGigs',
+  async ({ status, page = 1, limit = 10 }, { rejectWithValue }) => {
+    try {
+      const response = await API.get('/gigs/my-gigs', {
+        params: { status, page, limit }
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch your gigs');
+    }
+  }
+);
+
+export const fetchGigDetail = createAsyncThunk(
+  'gigs/fetchGigDetail',
+  async (gigId, { rejectWithValue }) => {
+    try {
+      const response = await API.get(`/gigs/${gigId}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch gig');
+    }
+  }
+);
+
+export const createGig = createAsyncThunk(
+  'gigs/createGig',
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await API.post('/gigs', data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to create gig');
+    }
+  }
+);
+
+export const updateGig = createAsyncThunk(
+  'gigs/updateGig',
+  async ({ gigId, data }, { rejectWithValue }) => {
+    try {
+      const response = await API.put(`/gigs/${gigId}`, data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update gig');
+    }
+  }
+);
+
+export const deleteGig = createAsyncThunk(
+  'gigs/deleteGig',
+  async (gigId, { rejectWithValue }) => {
+    try {
+      await API.delete(`/gigs/${gigId}`);
+      return gigId;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete gig');
+    }
+  }
+);
 
 const initialState = {
   gigs: [],
+  myGigs: [],
   selectedGig: null,
+  total: 0,
+  pages: 0,
+  currentPage: 1,
   loading: false,
   error: null,
-  searchQuery: '',
-  filter: 'all', // all, open, assigned
+  success: false
 };
 
-const gigSlice = createSlice({
+const gigsSlice = createSlice({
   name: 'gigs',
   initialState,
   reducers: {
-    // Set all gigs
-    setGigs: (state, action) => {
-      state.gigs = action.payload;
-      state.loading = false;
-      state.error = null;
-    },
-
-    // Set single gig
-    setSelectedGig: (state, action) => {
-      state.selectedGig = action.payload;
-    },
-
-    // Add new gig
-    addGig: (state, action) => {
-      state.gigs.unshift(action.payload);
-    },
-
-    // Update gig status
-    updateGigStatus: (state, action) => {
-      const { gigId, status } = action.payload;
-      const gig = state.gigs.find((g) => g._id === gigId);
-      if (gig) {
-        gig.status = status;
-      }
-      if (state.selectedGig && state.selectedGig._id === gigId) {
-        state.selectedGig.status = status;
-      }
-    },
-
-    // Set search query
-    setSearchQuery: (state, action) => {
-      state.searchQuery = action.payload;
-    },
-
-    // Set filter
-    setFilter: (state, action) => {
-      state.filter = action.payload;
-    },
-
-    // Set loading
-    setLoading: (state, action) => {
-      state.loading = action.payload;
-    },
-
-    // Set error
-    setError: (state, action) => {
-      state.error = action.payload;
-      state.loading = false;
-    },
-
-    // Clear error
     clearError: (state) => {
       state.error = null;
     },
+    clearSuccess: (state) => {
+      state.success = false;
+    }
   },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchGigs.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchGigs.fulfilled, (state, action) => {
+        state.loading = false;
+        state.gigs = action.payload.gigs;
+        state.total = action.payload.total;
+        state.pages = action.payload.pages;
+        state.currentPage = action.payload.currentPage;
+      })
+      .addCase(fetchGigs.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchMyGigs.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchMyGigs.fulfilled, (state, action) => {
+        state.loading = false;
+        state.myGigs = action.payload.gigs;
+      })
+      .addCase(fetchMyGigs.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchGigDetail.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchGigDetail.fulfilled, (state, action) => {
+        state.loading = false;
+        state.selectedGig = action.payload.gig;
+        if (action.payload.userHasBid !== undefined) {
+          state.selectedGig.userHasBid = action.payload.userHasBid;
+        }
+      })
+      .addCase(fetchGigDetail.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(createGig.fulfilled, (state, action) => {
+        state.myGigs.unshift(action.payload.gig);
+        state.success = true;
+      })
+      .addCase(createGig.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+      .addCase(updateGig.fulfilled, (state, action) => {
+        const index = state.myGigs.findIndex(g => g._id === action.payload.gig._id);
+        if (index !== -1) {
+          state.myGigs[index] = action.payload.gig;
+        }
+        state.selectedGig = action.payload.gig;
+        state.success = true;
+      })
+      .addCase(updateGig.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+      .addCase(deleteGig.fulfilled, (state, action) => {
+        state.myGigs = state.myGigs.filter(g => g._id !== action.payload);
+        state.success = true;
+      })
+      .addCase(deleteGig.rejected, (state, action) => {
+        state.error = action.payload;
+      });
+  }
 });
 
-export const {
-  setGigs,
-  setSelectedGig,
-  addGig,
-  updateGigStatus,
-  setSearchQuery,
-  setFilter,
-  setLoading,
-  setError,
-  clearError,
-} = gigSlice.actions;
-
-export default gigSlice.reducer;
+export const { clearError, clearSuccess } = gigsSlice.actions;
+export default gigsSlice.reducer;

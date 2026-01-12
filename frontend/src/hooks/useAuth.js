@@ -1,13 +1,10 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import authService from '../services/authService';
+import { useCallback } from 'react';
 import {
-  loginSuccess,
-  loginFailure,
-  registerSuccess,
-  registerFailure,
-  logout as logoutAction,
-  setLoading,
+  login as loginThunk,
+  register as registerThunk,
+  logout as logoutThunk,
   clearError,
 } from '../store/slices/authSlice';
 
@@ -18,47 +15,39 @@ export const useAuth = () => {
     (state) => state.auth
   );
 
-  const register = async (name, email, password) => {
+  const register = useCallback(async (name, email, password) => {
     try {
-      dispatch(setLoading(true));
-      const user = await authService.register(name, email, password);
-      dispatch(registerSuccess(user));
+      const user = await dispatch(registerThunk({ name, email, password })).unwrap();
       navigate('/dashboard');
       return user;
     } catch (err) {
-      dispatch(registerFailure(err));
       throw err;
     }
-  };
+  }, [dispatch, navigate]);
 
-  const login = async (email, password) => {
+  const login = useCallback(async (email, password) => {
     try {
-      dispatch(setLoading(true));
-      const user = await authService.login(email, password);
-      dispatch(loginSuccess(user));
+      const user = await dispatch(loginThunk({ email, password })).unwrap();
       navigate('/dashboard');
       return user;
     } catch (err) {
-      dispatch(loginFailure(err));
       throw err;
     }
-  };
+  }, [dispatch, navigate]);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
-      await authService.logout();
-      dispatch(logoutAction());
-      navigate('/');
+      await dispatch(logoutThunk()).unwrap();
+      navigate('/login');
     } catch (err) {
       console.error('Logout error:', err);
-      dispatch(logoutAction());
-      navigate('/');
+      navigate('/login');
     }
-  };
+  }, [dispatch, navigate]);
 
-  const handleClearError = () => {
+  const handleClearError = useCallback(() => {
     dispatch(clearError());
-  };
+  }, [dispatch]);
 
   return {
     user,

@@ -35,11 +35,11 @@ export const VALIDATION = {
   EMAIL_PATTERN: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   PASSWORD_MIN: 6,
   PASSWORD_MAX: 50,
-  TITLE_MIN: 3,
+  TITLE_MIN: 5,
   TITLE_MAX: 100,
-  DESCRIPTION_MIN: 10,
+  DESCRIPTION_MIN: 20,
   DESCRIPTION_MAX: 5000,
-  BUDGET_MIN: 100,
+  BUDGET_MIN: 1,
   BUDGET_MAX: 1000000,
   BID_MESSAGE_MIN: 10,
   BID_MESSAGE_MAX: 500,
@@ -109,7 +109,7 @@ export const TOAST_MESSAGES = {
   GIG_CREATED: 'Gig created successfully!',
   BID_SUBMITTED: 'Bid submitted successfully!',
   FREELANCER_HIRED: 'Freelancer hired successfully!',
-  
+
   // Error
   LOGIN_FAILED: 'Login failed. Please try again.',
   REGISTER_FAILED: 'Registration failed. Please try again.',

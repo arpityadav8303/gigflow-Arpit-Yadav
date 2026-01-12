@@ -36,6 +36,8 @@ const SearchBar = ({ onSearch, onFilter, loading = false }) => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
+            name="search"
+            aria-label="Search gigs"
             placeholder="Search gigs by title..."
             value={searchQuery}
             onChange={handleSearchChange}
@@ -54,6 +56,8 @@ const SearchBar = ({ onSearch, onFilter, loading = false }) => {
 
         {/* Filter Select */}
         <select
+          name="filter"
+          aria-label="Filter gigs"
           value={selectedFilter}
           onChange={handleFilterChange}
           disabled={loading}

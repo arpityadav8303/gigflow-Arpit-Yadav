@@ -1,180 +1,189 @@
 # GigFlow - Freelance Marketplace Platform
 
-GigFlow is a mini-freelance marketplace platform where clients can post jobs (Gigs) and freelancers can apply for them (Bids). This is the backend API built with Node.js, Express, and MongoDB.
+A full-stack mini-freelance marketplace where clients can post jobs (Gigs) and freelancers can bid on them with real-time notifications using Socket.io.
 
-## Features
+## Project Structure
 
-- **User Authentication**: Secure sign-up and login with JWT & HttpOnly cookies
-- **Fluid Roles**: Any user can post jobs or bid on jobs
-- **Gig Management**: Create, browse, and search for gigs
-- **Bidding System**: Freelancers can submit bids with messages
-- **Hiring Logic**: Clients can hire freelancers, automatically rejecting other bids
-- **Protected Routes**: Authentication required for sensitive operations
-
-## Tech Stack
-
-- **Backend**: Node.js + Express.js
-- **Database**: MongoDB with Mongoose
-- **Authentication**: JWT (JSON Web Tokens) with HttpOnly cookies
-- **Password Hashing**: bcryptjs
-- **Environment**: Dotenv
-
-## Installation
-
-1. Clone the repository
-```bash
-git clone <repository-url>
-cd gigflow-backend
+```
+gigflow/
+├── backend/
+│   ├── models/
+│   │   ├── User.js
+│   │   ├── Gig.js
+│   │   └── Bid.js
+│   ├── routes/
+│   │   ├── auth.js
+│   │   ├── gigs.js
+│   │   └── bids.js
+│   ├── middleware/
+│   │   ├── auth.js
+│   │   └── validation.js
+│   ├── server.js
+│   ├── package.json
+│   └── .env.example
+├── frontend/
+│   ├── src/
+│   │   ├── slices/
+│   │   │   ├── authSlice.js
+│   │   │   ├── gigsSlice.js
+│   │   │   └── bidsSlice.js
+│   │   ├── store/
+│   │   │   └── store.js
+│   │   ├── components/
+│   │   │   └── Navbar.jsx
+│   │   ├── pages/
+│   │   │   ├── Login.jsx
+│   │   │   ├── Register.jsx
+│   │   │   ├── GigsFeed.jsx
+│   │   │   ├── GigDetail.jsx
+│   │   │   ├── MyGigs.jsx
+│   │   │   ├── MyBids.jsx
+│   │   │   ├── PostGig.jsx
+│   │   │   └── Profile.jsx
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── package.json
+│   └── .env.example
+└── README.md
 ```
 
-2. Install dependencies
+## Technology Stack
+
+### Backend
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Database**: MongoDB with Mongoose ODM
+- **Authentication**: JWT (JSON Web Tokens)
+- **Real-time**: Socket.io
+- **Security**: bcryptjs, cookie-parser, CORS
+
+### Frontend
+- **Framework**: React.js with Vite
+- **State Management**: Redux Toolkit
+- **HTTP Client**: Axios
+- **Styling**: Tailwind CSS
+- **Routing**: React Router
+
+## Features Implemented
+
+### 1. User Authentication
+- ✅ Secure registration with password hashing (bcryptjs)
+- ✅ Login with JWT tokens stored in HttpOnly cookies
+- ✅ Logout functionality
+- ✅ Protected routes and middleware
+- ✅ User profile management
+
+### 2. Gig Management (CRUD)
+- ✅ Browse all open gigs with pagination
+- ✅ Search gigs by title and description
+- ✅ Filter by category
+- ✅ Post new gigs (clients)
+- ✅ Edit own gigs
+- ✅ Delete own gigs
+- ✅ View gig details with bid count
+
+### 3. Bidding System
+- ✅ Submit bids on open gigs
+- ✅ View all bids for own gigs (owner only)
+- ✅ View submitted bids history
+- ✅ Delete pending bids
+- ✅ Prevent duplicate bids from same freelancer
+
+### 4. Hiring Logic (Critical)
+- ✅ Client can hire freelancer from bid list
+- ✅ Atomic transaction processing (MongoDB transactions)
+- ✅ Race condition prevention (using transactions)
+- ✅ Automatic rejection of other bids when one is hired
+- ✅ Gig status changes from "open" to "assigned"
+- ✅ Real-time notification to hired freelancer
+
+### 5. Real-time Features (Bonus)
+- ✅ Socket.io integration for real-time notifications
+- ✅ Instant notification when freelancer is hired
+- ✅ No page refresh needed for updates
+- ✅ User connection tracking
+
+### 6. Security Features
+- ✅ JWT authentication with token expiration
+- ✅ HttpOnly cookies for secure token storage
+- ✅ Password hashing with bcryptjs
+- ✅ CORS protection
+- ✅ Request validation and sanitization
+- ✅ Authorization checks for protected resources
+- ✅ MongoDB transaction support for atomic operations
+
+## Installation & Setup
+
+### Prerequisites
+- Node.js (v14+)
+- MongoDB (local or Atlas)
+- npm or yarn
+
+### Backend Setup
+
 ```bash
+cd backend
 npm install
-```
 
-3. Create `.env` file from `.env.example`
-```bash
+# Create .env file
 cp .env.example .env
-```
 
-4. Update `.env` with your configuration
-```
-PORT=5000
-MONGODB_URI=mongodb://localhost:27017/gigflow
-JWT_SECRET=your_secure_jwt_secret_key
-NODE_ENV=development
-```
+# Update .env with your values
+# MONGODB_URI=mongodb://localhost:27017/gigflow
+# JWT_SECRET=your_secret_key
+# PORT=5000
+# FRONTEND_URL=http://localhost:5173
 
-5. Start the server
-```bash
+# Start server
 npm start
+# or for development with auto-reload
+npm run dev
 ```
 
-The server will run on `http://localhost:5000`
+### Frontend Setup
+
+```bash
+cd frontend
+npm install
+
+# Create .env file
+cp .env.example .env
+
+# Update .env with your values
+# VITE_API_URL=http://localhost:5000/api
+
+# Start development server
+npm run dev
+```
 
 ## API Endpoints
 
 ### Authentication
-
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|----------------|
-| POST | `/api/auth/register` | Register new user | No |
-| POST | `/api/auth/login` | Login user | No |
-| POST | `/api/auth/logout` | Logout user | Yes |
+```
+POST   /api/auth/register       - Register new user
+POST   /api/auth/login          - Login & set HttpOnly Cookie
+POST   /api/auth/logout         - Logout & clear cookie
+GET    /api/auth/me             - Get current user
+PUT    /api/auth/profile        - Update user profile
+```
 
 ### Gigs
-
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|----------------|
-| GET | `/api/gigs` | Get all open gigs | No |
-| GET | `/api/gigs?search=keyword` | Search gigs by title | No |
-| GET | `/api/gigs/:id` | Get single gig | No |
-| POST | `/api/gigs` | Create new gig | Yes |
+```
+GET    /api/gigs                - Fetch all open gigs (with search/filter)
+GET    /api/gigs/my-gigs        - Fetch user's own gigs
+GET    /api/gigs/:gigId         - Fetch single gig details
+POST   /api/gigs                - Create new gig
+PUT    /api/gigs/:gigId         - Update gig
+DELETE /api/gigs/:gigId         - Delete gig
+```
 
 ### Bids
-
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|----------------|
-| POST | `/api/bids` | Submit a bid | Yes |
-| GET | `/api/bids/:gigId` | Get all bids for a gig | Yes (Owner only) |
-| PATCH | `/api/bids/:bidId/hire` | Hire a freelancer | Yes (Owner only) |
-
-## Request/Response Examples
-
-### Register
-**Request:**
-```json
-POST /api/auth/register
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "password123"
-}
 ```
-
-**Response:**
-```json
-{
-  "message": "User registered successfully",
-  "user": {
-    "id": "user_id",
-    "name": "John Doe",
-    "email": "john@example.com"
-  }
-}
-```
-
-### Create Gig
-**Request:**
-```json
-POST /api/gigs
-{
-  "title": "Build a React App",
-  "description": "I need a React dashboard",
-  "budget": 5000
-}
-```
-
-**Response:**
-```json
-{
-  "message": "Gig created successfully",
-  "gig": {
-    "_id": "gig_id",
-    "title": "Build a React App",
-    "description": "I need a React dashboard",
-    "budget": 5000,
-    "ownerId": "user_id",
-    "status": "open",
-    "createdAt": "2024-01-11T10:00:00Z"
-  }
-}
-```
-
-### Submit Bid
-**Request:**
-```json
-POST /api/bids
-{
-  "gigId": "gig_id",
-  "message": "I can do this in 2 weeks"
-}
-```
-
-**Response:**
-```json
-{
-  "message": "Bid submitted successfully",
-  "bid": {
-    "_id": "bid_id",
-    "gigId": "gig_id",
-    "freelancerId": "user_id",
-    "message": "I can do this in 2 weeks",
-    "status": "pending",
-    "createdAt": "2024-01-11T10:05:00Z"
-  }
-}
-```
-
-### Hire Freelancer
-**Request:**
-```json
-PATCH /api/bids/bid_id/hire
-```
-
-**Response:**
-```json
-{
-  "message": "Freelancer hired successfully",
-  "bid": {
-    "_id": "bid_id",
-    "gigId": "gig_id",
-    "freelancerId": "user_id",
-    "message": "I can do this in 2 weeks",
-    "status": "hired",
-    "createdAt": "2024-01-11T10:05:00Z"
-  }
-}
+POST   /api/bids                - Submit bid on gig
+GET    /api/bids/gig/:gigId     - Get all bids for gig (owner only)
+GET    /api/bids/my-bids        - Get user's submitted bids
+PATCH  /api/bids/:bidId/hire    - Hire freelancer (with transaction)
+DELETE /api/bids/:bidId         - Delete pending bid
 ```
 
 ## Database Schema
@@ -182,22 +191,34 @@ PATCH /api/bids/bid_id/hire
 ### User
 ```javascript
 {
-  name: String,
-  email: String (unique),
-  password: String (hashed),
-  timestamps: true
+  name: String (required),
+  email: String (required, unique),
+  password: String (required, hashed),
+  avatar: String,
+  bio: String,
+  skills: [String],
+  hourlyRate: Number,
+  isVerified: Boolean,
+  createdAt: Date,
+  updatedAt: Date
 }
 ```
 
 ### Gig
 ```javascript
 {
-  title: String,
-  description: String,
-  budget: Number,
+  title: String (required),
+  description: String (required),
+  budget: Number (required),
+  category: String (enum),
+  status: String (open, assigned, completed, cancelled),
   ownerId: ObjectId (ref: User),
-  status: String (enum: ['open', 'assigned']),
-  timestamps: true
+  ownerName: String,
+  hiredFreelancerId: ObjectId (ref: User),
+  deadline: Date,
+  bidCount: Number,
+  createdAt: Date,
+  updatedAt: Date
 }
 ```
 
@@ -206,91 +227,196 @@ PATCH /api/bids/bid_id/hire
 {
   gigId: ObjectId (ref: Gig),
   freelancerId: ObjectId (ref: User),
-  message: String,
-  status: String (enum: ['pending', 'hired', 'rejected']),
-  timestamps: true
+  freelancerName: String,
+  message: String (required),
+  price: Number (required),
+  status: String (pending, hired, rejected),
+  createdAt: Date,
+  updatedAt: Date
 }
 ```
 
-## Key Features Explained
+## Key Features & Implementation Details
 
-### Authentication Flow
-1. User registers with name, email, and password
-2. Password is hashed using bcryptjs
-3. JWT token is generated and set in HttpOnly cookie
-4. Token is verified on protected routes
+### 1. Atomic Transactions (Race Condition Prevention)
+The hiring logic uses MongoDB transactions to ensure atomicity:
+- Only one freelancer can be hired even with simultaneous clicks
+- If two admins hire different freelancers at the same time, only one succeeds
+- All other bids are atomically marked as rejected
+- Gig status is atomically updated to "assigned"
 
-### Hiring Logic
-1. Freelancer submits a bid on an open gig
-2. Gig owner reviews all pending bids
-3. Owner clicks "Hire" on a bid
-4. System updates:
-   - Gig status: `open` → `assigned`
-   - Selected bid status: `pending` → `hired`
-   - Other bids status: `pending` → `rejected`
+### 2. Real-time Notifications
+Socket.io implementation:
+- User login maps userId to socket ID
+- When freelancer is hired, they receive instant notification
+- Notification includes gig title, client name, and price
+- No page refresh required
 
-## Error Handling
+### 3. Error Handling
+- Input validation on both client and server
+- Custom error middleware
+- User-friendly error messages
+- Proper HTTP status codes
 
-The API handles the following error cases:
-- Validation errors (400)
-- Authentication errors (401)
-- Authorization errors (403)
-- Not found errors (404)
-- Server errors (500)
+### 4. Pagination
+- Gigs and bids support pagination
+- Configurable page size
+- Total count and pages returned
 
-## Folder Structure
+## Running the Application
 
+### Development Mode
+
+**Terminal 1 (Backend)**
+```bash
+cd backend
+npm run dev
 ```
-gigflow-backend/
-├── config/
-│   └── db.js
-├── controllers/
-│   ├── authController.js
-│   ├── gigController.js
-│   └── bidController.js
-├── middleware/
-│   ├── auth.js
-│   └── errorHandler.js
-├── models/
-│   ├── User.js
-│   ├── Gig.js
-│   └── Bid.js
-├── routes/
-│   ├── authRoutes.js
-│   ├── gigRoutes.js
-│   └── bidRoutes.js
-├── utils/
-│   └── tokenUtils.js
-├── .env.example
-├── .gitignore
-├── package.json
-├── README.md
-└── server.js
+
+**Terminal 2 (Frontend)**
+```bash
+cd frontend
+npm run dev
 ```
+
+Access the application at `http://localhost:5173`
+
+### Production Build
+
+```bash
+# Backend
+npm start
+
+# Frontend
+npm run build
+npm run preview
+```
+
+## Testing the Hiring Flow
+
+1. **Register as Client**: Create account and login
+2. **Post a Gig**: Click "Post Gig" and fill in details
+3. **Register as Freelancer**: Use different account/email
+4. **Browse Gigs**: View the posted gig
+5. **Submit Bid**: Click "Bid" and enter amount/message
+6. **Hire Freelancer**: 
+   - Go back to client account
+   - Navigate to "My Gigs"
+   - View gig details and click "Hire" on desired bid
+   - Observe real-time notification in freelancer's dashboard
 
 ## Environment Variables
 
-Create a `.env` file with the following variables:
-
+### Backend (.env)
 ```
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/gigflow
-JWT_SECRET=your_jwt_secret_key
 NODE_ENV=development
+MONGODB_URI=mongodb://localhost:27017/gigflow
+JWT_SECRET=your_super_secret_jwt_key_change_in_production
+FRONTEND_URL=http://localhost:5173
 ```
 
-## Future Enhancements
+### Frontend (.env)
+```
+VITE_API_URL=http://localhost:5000/api
+```
 
-- MongoDB Transactions for race condition handling
-- Socket.io for real-time notifications
-- Payment integration
-- Rating and review system
-- User profile management
+## Package Dependencies
 
-## Author
+### Backend
+```json
+{
+  "express": "^4.18.0",
+  "mongoose": "^7.0.0",
+  "bcryptjs": "^2.4.3",
+  "jsonwebtoken": "^9.0.0",
+  "cookie-parser": "^1.4.6",
+  "cors": "^2.8.5",
+  "socket.io": "^4.6.0",
+  "dotenv": "^16.0.0"
+}
+```
 
-Built as an internship assignment for GigFlow platform.
+### Frontend
+```json
+{
+  "react": "^18.0.0",
+  "react-dom": "^18.0.0",
+  "react-router-dom": "^6.0.0",
+  "redux": "^4.2.0",
+  "@reduxjs/toolkit": "^1.9.0",
+  "axios": "^1.3.0",
+  "socket.io-client": "^4.6.0",
+  "tailwindcss": "^3.0.0"
+}
+```
+
+## Bonus Features Completed
+
+### ✅ Bonus 1: Transactional Integrity
+- MongoDB transactions implemented in hiring logic
+- Race condition prevention with atomic updates
+- Prevents multiple hires of same gig
+
+### ✅ Bonus 2: Real-time Updates
+- Socket.io integration complete
+- Real-time hiring notifications
+- User connection mapping for targeted notifications
+
+## Security Considerations
+
+1. **Authentication**: JWT tokens with 7-day expiration
+2. **Storage**: HttpOnly cookies prevent XSS attacks
+3. **Passwords**: Hashed with bcryptjs (salt rounds: 10)
+4. **CORS**: Configured for frontend origin
+5. **Validation**: Input sanitization on all endpoints
+6. **Authorization**: Role-based access (owner checks)
+7. **Transactions**: Prevents race conditions
+
+## Troubleshooting
+
+### MongoDB Connection Error
+- Ensure MongoDB is running locally or check Atlas connection string
+- Verify MONGODB_URI in .env file
+
+### CORS Error
+- Check FRONTEND_URL matches your frontend origin
+- Ensure credentials: true in axios configuration
+
+### Socket.io Not Working
+- Verify Socket.io is running on backend
+- Check browser console for connection errors
+- Ensure port 5000 is accessible
+
+### Token Expired
+- Clear cookies and log in again
+- Check JWT_SECRET is consistent between sessions
+
+## Submission Checklist
+
+- ✅ GitHub Repository with complete source code
+- ✅ README.md with setup instructions
+- ✅ .env.example file with all required variables
+- ✅ Atomic transaction implementation
+- ✅ Real-time Socket.io notifications
+- ✅ All CRUD operations for Gigs
+- ✅ Bidding system with status management
+- ✅ Protected routes and proper error handling
+- ✅ Proper database schema with relationships
+
+## Video Demo Instructions
+
+Record a 2-minute Loom video demonstrating:
+1. User registration and login (0:00-0:15)
+2. Posting a gig as client (0:15-0:30)
+3. Browsing and bidding as freelancer (0:30-0:45)
+4. Viewing bids and hiring freelancer (0:45-1:15)
+5. Real-time notification display (1:15-2:00)
 
 ## License
 
-MIT
+MIT License - Feel free to use for educational purposes
+
+## Support
+
+For questions or issues, please refer to the documentation or create an issue in the repository.

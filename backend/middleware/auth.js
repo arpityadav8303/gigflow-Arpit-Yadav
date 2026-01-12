@@ -1,28 +1,60 @@
+// middleware/auth.js
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
-const authMiddleware = (req, res, next) => {
+const auth = async (req, res, next) => {
   try {
-    // Check token in cookies first, then Authorization header
-    let token = req.cookies.token;
+    // Get token from cookie or Authorization header
+    const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
 
     if (!token) {
-      // Check Authorization header: "Bearer token"
-      const authHeader = req.headers.authorization;
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.slice(7);
-      }
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required. Please log in.'
+      });
     }
 
-    if (!token) {
-      return res.status(401).json({ message: 'Not authorized to access this route' });
+    // Verify token
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || 'your_jwt_secret_key'
+    );
+
+    // Get user details
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found'
+      });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    // Attach user info to request
+    req.userId = decoded.id;
+    req.userName = user.name;
+    req.userEmail = user.email;
+
     next();
   } catch (error) {
-    return res.status(401).json({ message: 'Not authorized to access this route' });
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Token expired. Please log in again.'
+      });
+    }
+
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token'
+      });
+    }
+
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication failed'
+    });
   }
 };
 
-module.exports = authMiddleware;
+module.exports = { auth };

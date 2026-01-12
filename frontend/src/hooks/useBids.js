@@ -1,68 +1,56 @@
 import { useDispatch, useSelector } from 'react-redux';
-import bidService from '../services/bidService';
-import { useGigs } from './useGigs';
+import { useCallback } from 'react';
 import {
-  setBidsByGig,
-  addBid,
-  updateBidStatus,
-  updateBidsAfterHire,
-  setLoading,
-  setError,
+  submitBid,
+  fetchGigBids,
+  fetchMyBids,
+  hireBid,
   clearError,
 } from '../store/slices/bidSlice';
 
 export const useBids = () => {
   const dispatch = useDispatch();
-  const { bids, bidsByGig, loading, error } = useSelector(
+  const { gigBids, myBids, loading, error, success } = useSelector(
     (state) => state.bids
   );
-  const { handleGigStatusUpdate } = useGigs();
 
   // Fetch bids for a specific gig
-  const fetchBidsForGig = async (gigId) => {
+  const fetchBidsForGig = useCallback(async (gigId) => {
     try {
-      dispatch(setLoading(true));
-      const bidsData = await bidService.getBidsForGig(gigId);
-      dispatch(setBidsByGig({ gigId, bids: bidsData }));
+      await dispatch(fetchGigBids(gigId)).unwrap();
     } catch (err) {
-      dispatch(setError(err));
+      console.error('Fetch bids error:', err);
     }
-  };
+  }, [dispatch]);
+
+  // Fetch my bids
+  const fetchUserBids = useCallback(async () => {
+    try {
+      await dispatch(fetchMyBids({})).unwrap();
+    } catch (err) {
+      console.error('Fetch my bids error:', err);
+    }
+  }, [dispatch]);
 
   // Submit a new bid
-  const submitNewBid = async (gigId, message) => {
+  const submitNewBid = useCallback(async (gigId, message, price) => {
     try {
-      dispatch(setLoading(true));
-      const newBid = await bidService.submitBid(gigId, message);
-      dispatch(addBid({ gigId, bid: newBid }));
+      const newBid = await dispatch(submitBid({ gigId, message, price })).unwrap();
       return newBid;
     } catch (err) {
-      dispatch(setError(err));
       throw err;
     }
-  };
+  }, [dispatch]);
 
   // Hire a freelancer
-  const hireFreelancer = async (gigId, bidId) => {
+  const hireFreelancer = useCallback(async (gigId, bidId) => {
     try {
-      dispatch(setLoading(true));
-      const hiredBid = await bidService.hireBid(bidId);
-      
-      // Update bid status to hired
-      dispatch(updateBidStatus({ bidId, status: 'hired' }));
-      
-      // Reject other bids
-      dispatch(updateBidsAfterHire({ gigId, hiredBidId: bidId }));
-      
-      // Update gig status to assigned
-      handleGigStatusUpdate(gigId, 'assigned');
-      
-      return hiredBid;
+      const result = await dispatch(hireBid(bidId)).unwrap();
+      return result;
     } catch (err) {
-      dispatch(setError(err));
       throw err;
     }
-  };
+  }, [dispatch]);
 
   // Handle socket update for hired notification
   const handleHiredNotification = (data) => {
@@ -70,16 +58,18 @@ export const useBids = () => {
     // This will be handled by socket listener in component
   };
 
-  const handleClearError = () => {
+  const handleClearError = useCallback(() => {
     dispatch(clearError());
-  };
+  }, [dispatch]);
 
   return {
-    bids,
-    bidsByGig,
+    gigBids,
+    myBids,
     loading,
     error,
+    success,
     fetchBidsForGig,
+    fetchMyBids: fetchUserBids,
     submitNewBid,
     hireFreelancer,
     handleHiredNotification,

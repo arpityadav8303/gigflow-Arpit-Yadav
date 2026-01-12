@@ -1,73 +1,96 @@
+// server.js
 const express = require('express');
+const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const http = require('http');
-const { Server } = require('socket.io');
+const socketIO = require('socket.io');
 require('dotenv').config();
 
-const connectDB = require('./config/db');
-
-// Import routes
 const authRoutes = require('./routes/authRoutes');
 const gigRoutes = require('./routes/gigRoutes');
 const bidRoutes = require('./routes/bidRoutes');
 
-// Import middleware
-const errorHandler = require('./middleware/errorHandler');
-
 const app = express();
 const server = http.createServer(app);
-
-// Socket.io setup with CORS
-const io = new Server(server, {
+const io = socketIO(server, {
   cors: {
-    origin: 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true
   }
 });
 
-// Make io available to routes
-app.set('io', io);
-
-// Connect to database
-connectDB();
-
 // Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true
 }));
+app.use(express.json());
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(cookieParser());
+
+// MongoDB Connection
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/gigflow')
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+// Make io accessible to routes
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/gigs', gigRoutes);
 app.use('/api/bids', bidRoutes);
 
-// Socket.io Connection
-io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.id}`);
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'Server is running' });
+});
 
-  // User joins their personal room
-  socket.on('join', (userId) => {
-    socket.join(`user_${userId}`);
-    console.log(`User ${userId} joined their room`);
-  });
-
-  // User disconnects
-  socket.on('disconnect', () => {
-    console.log(`User disconnected: ${socket.id}`);
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Internal Server Error',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 });
 
-// Error handling middleware (must be last)
-app.use(errorHandler);
+// Socket.io connection
+const connectedUsers = new Map();
 
-// Start server
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
+
+  socket.on('user:login', (userId) => {
+    connectedUsers.set(userId, socket.id);
+    console.log(`User ${userId} mapped to socket ${socket.id}`);
+  });
+
+  socket.on('user:logout', (userId) => {
+    connectedUsers.delete(userId);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+    // Remove user from connected map
+    for (let [userId, socketId] of connectedUsers.entries()) {
+      if (socketId === socket.id) {
+        connectedUsers.delete(userId);
+      }
+    }
+  });
+});
+
+// Export io and connectedUsers for use in routes
+app.set('io', io);
+app.set('connectedUsers', connectedUsers);
+
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`Socket.io running on port ${PORT}`);
 });

@@ -15,7 +15,7 @@ const BidForm = ({ gigId, onSuccess }) => {
   const onSubmit = async (data) => {
     try {
       setFormError(null);
-      await submitNewBid(gigId, data.message);
+      await submitNewBid(gigId, data.message, parseFloat(data.price));
       success('Bid submitted successfully!');
       reset();
       if (onSuccess) onSuccess();
@@ -35,13 +35,44 @@ const BidForm = ({ gigId, onSuccess }) => {
         </div>
       )}
 
+      {/* Price */}
+      <div>
+        <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
+          Bid Amount ($)
+          <span className="text-red-500 ml-1">*</span>
+        </label>
+        <input
+          id="price"
+          type="number"
+          placeholder="e.g. 500"
+          {...register('price', {
+            required: 'Bid amount is required',
+            valueAsNumber: true,
+            min: { value: 1, message: 'Price must be greater than 0' }
+          })}
+          disabled={loading}
+          className={`
+            w-full px-4 py-2 border rounded-lg transition-colors
+            ${errors.price
+              ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+              : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+            }
+            focus:outline-none focus:ring-2 focus:ring-offset-0
+          `}
+        />
+        {errors.price && (
+          <p className="text-red-500 text-sm mt-1">{errors.price.message}</p>
+        )}
+      </div>
+
       {/* Message */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
           Your Proposal
           <span className="text-red-500 ml-1">*</span>
         </label>
         <textarea
+          id="message"
           placeholder="Tell the client why you're the best fit for this job..."
           rows="5"
           {...register('message', {
@@ -51,10 +82,9 @@ const BidForm = ({ gigId, onSuccess }) => {
           disabled={loading}
           className={`
             w-full px-4 py-2 border rounded-lg transition-colors resize-none
-            ${
-              errors.message
-                ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+            ${errors.message
+              ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+              : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
             }
             focus:outline-none focus:ring-2 focus:ring-offset-0
           `}

@@ -17,7 +17,12 @@ const GigForm = ({ onSuccess }) => {
   const onSubmit = async (data) => {
     try {
       setFormError(null);
-      await createNewGig(data.title, data.description, parseFloat(data.budget));
+      await createNewGig(
+        data.title,
+        data.description,
+        parseFloat(data.budget),
+        data.category || 'Other'
+      );
       success('Gig created successfully!');
       if (onSuccess) onSuccess();
     } catch (err) {
@@ -54,11 +59,12 @@ const GigForm = ({ onSuccess }) => {
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
             Description
             <span className="text-red-500 ml-1">*</span>
           </label>
           <textarea
+            id="description"
             placeholder="Describe your gig in detail..."
             rows="6"
             {...register('description', {
@@ -68,10 +74,9 @@ const GigForm = ({ onSuccess }) => {
             disabled={loading}
             className={`
               w-full px-4 py-2 border rounded-lg transition-colors
-              ${
-                errors.description
-                  ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-                  : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+              ${errors.description
+                ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
               }
               focus:outline-none focus:ring-2 focus:ring-offset-0
             `}
@@ -82,21 +87,43 @@ const GigForm = ({ onSuccess }) => {
         </div>
 
         {/* Budget */}
-        <Input
-          label="Budget"
-          type="number"
-          placeholder="e.g., 5000"
-          icon={<DollarSign size={18} />}
-          {...register('budget', {
-            required: 'Budget is required',
-            validate: validators.budget,
-          })}
-          error={errors.budget?.message}
-          disabled={loading}
-          required
-          step="0.01"
-          min="0"
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Input
+            label="Budget ($)"
+            type="number"
+            placeholder="e.g., 5000"
+            icon={<DollarSign size={18} />}
+            {...register('budget', {
+              required: 'Budget is required',
+              validate: validators.budget,
+              valueAsNumber: true
+            })}
+            error={errors.budget?.message}
+            disabled={loading}
+            required
+            step="0.01"
+            min="0"
+          />
+
+          {/* Category */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Category
+            </label>
+            <select
+              {...register('category')}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              disabled={loading}
+            >
+              <option value="Other">Other</option>
+              <option value="Web Development">Web Development</option>
+              <option value="Mobile App">Mobile App</option>
+              <option value="Design">Design</option>
+              <option value="Content Writing">Content Writing</option>
+              <option value="Digital Marketing">Digital Marketing</option>
+            </select>
+          </div>
+        </div>
 
         {/* Info Box */}
         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">

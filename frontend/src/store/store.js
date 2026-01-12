@@ -1,17 +1,23 @@
-// Placeholder
+// frontend/src/store/store.js
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './slices/authSlice';
-import gigReducer from './slices/gigSlice';
-import bidReducer from './slices/bidSlice';
+import gigsReducer from './slices/gigSlice';
+import bidsReducer from './slices/bidSlice';
 import uiReducer from './slices/uiSlice';
 
-const store = configureStore({
+export const store = configureStore({
   reducer: {
     auth: authReducer,
-    gigs: gigReducer,
-    bids: bidReducer,
-    ui: uiReducer,
+    gigs: gigsReducer,
+    bids: bidsReducer,
+    ui: uiReducer
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ['gigs/fetchGigs/fulfilled', 'gigs/fetchMyGigs/fulfilled']
+      }
+    })
 });
 
 export default store;

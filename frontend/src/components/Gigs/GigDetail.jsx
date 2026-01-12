@@ -9,7 +9,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useDispatch, useSelector } from 'react-redux';
 import { openModal } from '../../store/slices/uiSlice';
 
-const GigDetail = ({ gig, loading }) => {
+const GigDetail = ({ gig, loading, onDelete }) => {
   const { user, isAuthenticated } = useAuth();
   const dispatch = useDispatch();
 
@@ -112,21 +112,36 @@ const GigDetail = ({ gig, loading }) => {
         {/* Action Button */}
         {!isOwner && gig.status === 'open' && (
           <div className="pt-6 border-t border-gray-200">
-            <Button
-              variant="primary"
-              size="full"
-              onClick={handleBidClick}
-            >
-              {isAuthenticated ? 'Submit Your Bid' : 'Login to Bid'}
-            </Button>
+            {gig.userHasBid ? (
+              <Button variant="secondary" size="full" disabled>
+                Bid Submitted
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                size="full"
+                onClick={handleBidClick}
+              >
+                {isAuthenticated ? 'Submit Your Bid' : 'Login to Bid'}
+              </Button>
+            )}
           </div>
         )}
 
         {isOwner && gig.status === 'open' && (
           <div className="pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-600">
-              This is your gig. Check the bids section to review freelancer proposals.
-            </p>
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-gray-600">
+                This is your gig. Check the bids section to review freelancer proposals.
+              </p>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={onDelete}
+              >
+                Delete Gig
+              </Button>
+            </div>
           </div>
         )}
 

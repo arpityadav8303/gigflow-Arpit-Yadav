@@ -15,9 +15,9 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const { gigs, loading: gigsLoading, fetchGigs } = useGigs();
-  const { bids, loading: bidsLoading, fetchBidsForGig } = useBids();
+  const { myBids, loading: bidsLoading, fetchBidsForGig, fetchMyBids } = useBids();
   const [userGigs, setUserGigs] = useState([]);
-  const [userBids, setUserBids] = useState([]);
+  // const [userBids, setUserBids] = useState([]); // Removed local state, using Redux state
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -30,29 +30,34 @@ const Dashboard = () => {
   useEffect(() => {
     if (isAuthenticated && user?._id) {
       fetchGigs();
+      fetchMyBids();
     }
   }, [isAuthenticated, user?._id]);
 
-  // Filter user's gigs and bids
+  // Filter user's gigs
   useEffect(() => {
     if (user?._id && gigs.length > 0) {
       const myGigs = gigs.filter((gig) => gig.ownerId._id === user._id);
       setUserGigs(myGigs);
 
       // Fetch bids for each of user's gigs
+      // Note: This might be expensive if many gigs. Ideally backend should provide a wrapper or detail view.
+      // For now, only fetching if explicitly viewing details might be better, but needed for stats?
+      // Actually stats "Active Bids" refers to BIDS I MADE. "Hired Projects" refers to BIDS I MADE.
+      // "Posted Gigs" is simply count.
+      // Bids for my gigs are only needed if I want to show "Applications received".
+      // The current stats don't show "Applications received".
+      // So we might not need to fetchBidsForGig for all gigs here.
+
+      // Let's keep it if it was intended to prefetch, but maybe optimize later.
       myGigs.forEach((gig) => {
-        fetchBidsForGig(gig._id);
+        // fetchBidsForGig(gig._id); // Optimization: Don't auto-fetch all bids for all gigs on dashboard unless needed.
       });
     }
   }, [user?._id, gigs]);
 
-  // Filter user's bids
-  useEffect(() => {
-    if (user?._id && bids.length > 0) {
-      const myBids = bids.filter((bid) => bid.freelancerId === user._id);
-      setUserBids(myBids);
-    }
-  }, [user?._id, bids]);
+  // myBids from Redux is already filtered from backend usually, or we use it directly.
+  const userBids = myBids;
 
   if (!isAuthenticated) {
     return (
