@@ -44,18 +44,8 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true);
-
-    // Check if the origin matches our production URL or any Vercel preview URL
-    if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
+  origin: 'https://gigflow-arpit-yadav.vercel.app', // No trailing slash!
+  credentials: true // REQUIRED: To accept cookies
 }));
 
 app.use(express.json());
