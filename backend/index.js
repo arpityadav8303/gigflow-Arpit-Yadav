@@ -84,14 +84,34 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'Server is running', env: process.env.NODE_ENV });
 });
 
-// Global Error handling middleware
+// Updated Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  let error = { ...err };
+  error.message = err.message;
+
+  // Log for development
+  console.error(err);
+
+  // Mongoose Validation Error (like the email regex failure)
+  if (err.name === 'ValidationError') {
+    const message = Object.values(err.errors).map(val => val.message);
+    return res.status(400).json({
+      success: false,
+      message: message[0] // Sends "Please provide a valid email"
+    });
+  }
+
+  // Mongoose Duplicate Key (e.g., email already exists)
+  if (err.code === 11000) {
+    return res.status(400).json({
+      success: false,
+      message: 'Email already exists. Please use another one.'
+    });
+  }
+
   res.status(err.status || 500).json({
     success: false,
-    message: err.message || 'Internal Server Error',
-    // Only show stack trace in development mode
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    message: error.message || 'Internal Server Error'
   });
 });
 
