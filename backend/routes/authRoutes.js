@@ -10,6 +10,8 @@ const router = express.Router();
 router.post('/register', async (req, res, next) => {
   try {
     const { name, email, password, confirmPassword } = req.body;
+    console.log('Register Request Body:', req.body);
+    console.log('Register Content-Type:', req.headers['content-type']);
 
     // Validation
     if (!name || !email || !password || !confirmPassword) {
@@ -50,7 +52,7 @@ router.post('/register', async (req, res, next) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
@@ -107,10 +109,11 @@ router.post('/login', async (req, res, next) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
+    console.log('Login successful, setting cookie:', token);
     res.status(200).json({
       success: true,
       message: 'Logged in successfully',
@@ -127,7 +130,7 @@ router.post('/logout', auth, (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict'
+    sameSite: 'lax'
   });
 
   res.status(200).json({
