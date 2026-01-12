@@ -23,6 +23,7 @@ const io = socketIO(server, {
         'http://localhost:5173',
         'http://localhost:3000'
       ];
+      
       if (!origin) return callback(null, true);
       if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
         callback(null, true);
