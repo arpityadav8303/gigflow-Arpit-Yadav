@@ -108,9 +108,9 @@ router.post('/login', async (req, res, next) => {
     // Set HttpOnly cookie
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000
+      secure: true,      // REQUIRED: Must be true for HTTPS (Render)
+      sameSite: 'none',  // REQUIRED: Allows cookies to be sent from Vercel to Render
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
     console.log('Login successful, setting cookie:', token);
@@ -129,8 +129,8 @@ router.post('/login', async (req, res, next) => {
 router.post('/logout', auth, (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax'
+    secure: true,
+    sameSite: 'none'
   });
 
   res.status(200).json({
