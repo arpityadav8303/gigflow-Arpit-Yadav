@@ -17,7 +17,19 @@ const server = http.createServer(app);
 
 const io = socketIO(server, {
   cors: {
-    origin: process.env.FRONTEND_URL, // Set this to your Vercel URL in your hosting dashboard
+    origin: function (origin, callback) {
+      const allowedOrigins = [
+        'https://gigflow-arpit-yadav.vercel.app',
+        'http://localhost:5173',
+        'http://localhost:3000'
+      ];
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PATCH", "DELETE", "PUT"]
   }
@@ -25,8 +37,24 @@ const io = socketIO(server, {
 
 // Middleware
 // UPDATED: CORS strictly tied to your hosted frontend URL [cite: 45]
+const allowedOrigins = [
+  'https://gigflow-arpit-yadav.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+
+    // Check if the origin matches our production URL or any Vercel preview URL
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
