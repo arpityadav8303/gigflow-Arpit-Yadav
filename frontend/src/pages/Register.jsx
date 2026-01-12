@@ -24,7 +24,7 @@ const Register = () => {
             return;
         }
         try {
-            await dispatch(register({ name, email, password })).unwrap();
+            await dispatch(register({ name, email, password, confirmPassword })).unwrap();
             navigate('/');
         } catch (error) {
             console.error('Registration failed:', error);
