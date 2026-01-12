@@ -13,15 +13,19 @@ const socketService = {
       });
 
       socket.on('connect', () => {
-        console.log('Socket connected:', socket.id);
+        console.log('DEBUG: Socket connected:', socket.id);
       });
 
       socket.on('disconnect', () => {
-        console.log('Socket disconnected');
+        console.log('DEBUG: Socket disconnected');
+      });
+
+      socket.on('connect_error', (error) => {
+        console.error('DEBUG: Socket connection error:', error);
       });
 
       socket.on('error', (error) => {
-        console.error('Socket error:', error);
+        console.error('DEBUG: Socket general error:', error);
       });
     }
     return socket;

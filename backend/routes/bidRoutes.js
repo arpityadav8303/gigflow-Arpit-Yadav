@@ -67,10 +67,18 @@ router.post('/', auth, validateBid, async (req, res, next) => {
     // Send real-time notification to gig owner
     const io = req.app.get('io');
     const connectedUsers = req.app.get('connectedUsers');
-    const ownerSocketId = connectedUsers.get(gig.ownerId.toString());
+
+    // Ensure ownerId is a string for lookup
+    const ownerIdStr = gig.ownerId.toString();
+    const ownerSocketId = connectedUsers.get(ownerIdStr);
+
+    console.log('DEBUG: New Bid Submission');
+    console.log(`DEBUG: Gig Owner ID: ${ownerIdStr}`);
+    console.log(`DEBUG: Connected Users Map Keys: ${Array.from(connectedUsers.keys())}`);
+    console.log(`DEBUG: Found Owner Socket ID: ${ownerSocketId}`);
 
     if (ownerSocketId && io) {
-      console.log(`Emitting newBid to owner ${gig.ownerId} at socket ${ownerSocketId}`);
+      console.log(`DEBUG: Emitting newBid to owner ${ownerIdStr} at socket ${ownerSocketId}`);
       io.to(ownerSocketId).emit('newBid', {
         bidId: bid._id,
         gigTitle: gig.title,
@@ -79,6 +87,8 @@ router.post('/', auth, validateBid, async (req, res, next) => {
         price: bid.price,
         message: bid.message
       });
+    } else {
+      console.log('DEBUG: Owner not connected or IO not found, skipping emission');
     }
 
     res.status(201).json({

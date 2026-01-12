@@ -111,19 +111,22 @@ app.use((err, req, res, next) => {
 const connectedUsers = new Map();
 
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+  console.log('DEBUG: User connected:', socket.id);
 
   // Map logged-in user ID to their active socket for targeted notifications [cite: 41]
   socket.on('user:login', (userId) => {
+    console.log(`DEBUG: user:login event received for userId: ${userId} on socket: ${socket.id}`);
     connectedUsers.set(userId, socket.id);
-    console.log(`User ${userId} mapped to socket ${socket.id}`);
+    console.log(`DEBUG: Connected Users Map:`, Array.from(connectedUsers.entries()));
   });
 
   socket.on('user:logout', (userId) => {
+    console.log(`DEBUG: user:logout for userId: ${userId}`);
     connectedUsers.delete(userId);
   });
 
   socket.on('disconnect', () => {
+    console.log('DEBUG: User disconnected:', socket.id);
     for (let [userId, socketId] of connectedUsers.entries()) {
       if (socketId === socket.id) {
         connectedUsers.delete(userId);
