@@ -13,6 +13,8 @@ import CreateGig from './pages/CreateGig';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import { checkAuth } from './store/slices/authSlice';
+import { SocketProvider } from './context/SocketContext';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   const dispatch = useDispatch();
@@ -35,28 +37,31 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
-        {isAuthenticated && <Navbar />}
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <Login />} />
-          <Route path="/register" element={isAuthenticated ? <Navigate to="/" /> : <Register />} />
+      <SocketProvider>
+        <div className="min-h-screen bg-gray-50">
+          <Toaster />
+          {isAuthenticated && <Navbar />}
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <Login />} />
+            <Route path="/register" element={isAuthenticated ? <Navigate to="/" /> : <Register />} />
 
-          {/* Protected Routes */}
-          <Route path="/" element={isAuthenticated ? <GigsFeed /> : <Navigate to="/login" />} />
-          <Route path="/gigs" element={isAuthenticated ? <GigsFeed /> : <Navigate to="/login" />} />
-          <Route path="/gigs/:id" element={isAuthenticated ? <GigDetail /> : <Navigate to="/login" />} />
-          <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
-          <Route path="/create-gig" element={isAuthenticated ? <CreateGig /> : <Navigate to="/login" />} />
-          <Route path="/my-gigs" element={isAuthenticated ? <MyGigs /> : <Navigate to="/login" />} />
-          <Route path="/my-bids" element={isAuthenticated ? <MyBids /> : <Navigate to="/login" />} />
-          <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} />
-          <Route path="/edit-gig/:id" element={isAuthenticated ? <CreateGig /> : <Navigate to="/login" />} />
+            {/* Protected Routes */}
+            <Route path="/" element={isAuthenticated ? <GigsFeed /> : <Navigate to="/login" />} />
+            <Route path="/gigs" element={isAuthenticated ? <GigsFeed /> : <Navigate to="/login" />} />
+            <Route path="/gigs/:id" element={isAuthenticated ? <GigDetail /> : <Navigate to="/login" />} />
+            <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
+            <Route path="/create-gig" element={isAuthenticated ? <CreateGig /> : <Navigate to="/login" />} />
+            <Route path="/my-gigs" element={isAuthenticated ? <MyGigs /> : <Navigate to="/login" />} />
+            <Route path="/my-bids" element={isAuthenticated ? <MyBids /> : <Navigate to="/login" />} />
+            <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} />
+            <Route path="/edit-gig/:id" element={isAuthenticated ? <CreateGig /> : <Navigate to="/login" />} />
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} />} />
-        </Routes>
-      </div>
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} />} />
+          </Routes>
+        </div>
+      </SocketProvider>
     </Router>
   );
 }

@@ -64,6 +64,23 @@ router.post('/', auth, validateBid, async (req, res, next) => {
     // Update bid count
     await Gig.findByIdAndUpdate(gigId, { $inc: { bidCount: 1 } });
 
+    // Send real-time notification to gig owner
+    const io = req.app.get('io');
+    const connectedUsers = req.app.get('connectedUsers');
+    const ownerSocketId = connectedUsers.get(gig.ownerId.toString());
+
+    if (ownerSocketId && io) {
+      console.log(`Emitting newBid to owner ${gig.ownerId} at socket ${ownerSocketId}`);
+      io.to(ownerSocketId).emit('newBid', {
+        bidId: bid._id,
+        gigTitle: gig.title,
+        gigId: gig._id,
+        freelancerName: req.userName,
+        price: bid.price,
+        message: bid.message
+      });
+    }
+
     res.status(201).json({
       success: true,
       message: 'Bid submitted successfully',
