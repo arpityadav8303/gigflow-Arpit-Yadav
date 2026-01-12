@@ -12,6 +12,7 @@ const gigRoutes = require('./routes/gigRoutes');
 const bidRoutes = require('./routes/bidRoutes');
 
 const app = express();
+app.set('trust proxy', 1); // Trust first proxy (Render/Vercel)
 const server = http.createServer(app);
 
 
@@ -23,7 +24,7 @@ const io = socketIO(server, {
         'http://localhost:5173',
         'http://localhost:3000'
       ];
-      
+
       if (!origin) return callback(null, true);
       if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
         callback(null, true);

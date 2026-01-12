@@ -2,11 +2,12 @@ import api from './api';
 
 const bidService = {
   // Submit a bid on a gig
-  submitBid: async (gigId, message) => {
+  submitBid: async (gigId, message, price) => {
     try {
       const response = await api.post('/bids', {
         gigId,
         message,
+        price
       });
       return response.data.bid;
     } catch (error) {
