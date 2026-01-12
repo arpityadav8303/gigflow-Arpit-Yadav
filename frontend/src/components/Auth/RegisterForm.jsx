@@ -22,7 +22,13 @@ const RegisterForm = ({ onSuccess }) => {
       success('Account created successfully!');
       onSuccess();
     } catch (err) {
-      const errorMsg = err || 'Registration failed. Please try again.';
+      // Handle both string errors (from Redux unwrap) and potential object errors
+      const errorMsg =
+        (typeof err === 'string' ? err : null) ||
+        err.response?.data?.message ||
+        err.message ||
+        'Registration failed. Please try again.';
+
       setFormError(errorMsg);
       errorNotif(errorMsg);
     }
